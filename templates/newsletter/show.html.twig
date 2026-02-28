@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ newsletter.title }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">{{ newsletter.title }}</h2>
+        <span class="text-muted">이메일 제목: {{ newsletter.subject }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ path('newsletter_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>목록
+        </a>
+        {% if newsletter.isDraft() %}
+            <a href="{{ path('newsletter_edit', {id: newsletter.id}) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i>수정
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header p-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-text me-2"></i>뉴스레터 미리보기</span>
+                {% if newsletter.isDraft() %}
+                    <span class="badge bg-warning text-dark">초안</span>
+                {% else %}
+                    <span class="badge bg-success">발송됨</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; background: #fafafa;">
+                    <div style="background: #4A90E2; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px;">
+                        <h3 style="margin:0;">{{ newsletter.title }}</h3>
+                    </div>
+                    {{ newsletter.content|raw }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header p-3"><i class="bi bi-info-circle me-2"></i>정보</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted">상태</dt>
+                    <dd class="col-sm-7">
+                        {% if newsletter.isDraft() %}
+                            <span class="badge bg-warning text-dark">초안</span>
+                        {% else %}
+                            <span class="badge bg-success">발송됨</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-sm-5 text-muted">작성일</dt>
+                    <dd class="col-sm-7">{{ newsletter.createdAt|date('Y-m-d H:i') }}</dd>
+                    {% if newsletter.sentAt %}
+                        <dt class="col-sm-5 text-muted">발송일</dt>
+                        <dd class="col-sm-7">{{ newsletter.sentAt|date('Y-m-d H:i') }}</dd>
+                    {% endif %}
+                    <dt class="col-sm-5 text-muted">구독자</dt>
+                    <dd class="col-sm-7">{{ subscriber_count }}명</dd>
+                </dl>
+            </div>
+        </div>
+
+        {% if newsletter.isDraft() %}
+        <div class="card mb-4">
+            <div class="card-header p-3 text-success"><i class="bi bi-send me-2"></i>뉴스레터 발송</div>
+            <div class="card-body">
+                <p class="text-muted small">활성 구독자 <strong>{{ subscriber_count }}명</strong>에게 이 뉴스레터를 발송합니다.</p>
+                {% if subscriber_count > 0 %}
+                    <form method="post" action="{{ path('newsletter_send', {id: newsletter.id}) }}"
+                          onsubmit="return confirm('{{ subscriber_count }}명의 구독자에게 발송하시겠습니까?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('send-newsletter-' ~ newsletter.id) }}">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-send-fill me-1"></i>발송하기
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-warning mb-0 small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        구독자가 없습니다. <a href="{{ path('subscriber_new') }}">구독자를 추가</a>하세요.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header p-3 text-danger"><i class="bi bi-trash me-2"></i>삭제</div>
+            <div class="card-body">
+                <form method="post" action="{{ path('newsletter_delete', {id: newsletter.id}) }}"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-newsletter-' ~ newsletter.id) }}">
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-trash me-1"></i>뉴스레터 삭제
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
